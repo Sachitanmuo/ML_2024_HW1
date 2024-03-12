@@ -12,7 +12,7 @@ struct SongData {
 
 class model{
 private:
-    vector<vector<double>> w;
+    vector<vector<double> > w;
     vector<SongData> Training_set;
     vector<SongData> Testing_set;
     int M;
@@ -20,7 +20,7 @@ public:
     model();
     void read_file();
     void initialize_params();
-    vector<vector<double>> phi_func(vector<double>&);
+    vector<vector<double> > phi_func(vector<double>&);
     void train();
     void test();
     double sigmoid(double);
@@ -64,10 +64,10 @@ void model::read_file(){
 }
 
 void model::initialize_params(){
-    vector<vector<double>> weight (11, vector<double>(M, 1.));
+    vector<vector<double> > weight (11, vector<double>(M, 1.));
 }
-vector<vector<double>> model::phi_func(vector<double>& input){
-    vector<vector<double>> phi (11, vector<double>(M, 0));
+vector<vector<double> > model::phi_func(vector<double>& input){
+    vector<vector<double> > phi (11, vector<double>(M, 0));
     for(int i = 0; i < 11; i ++)
         for(int j = 0; j < M ; j++)
                 phi[i][j] = j? sigmoid((3*j/M)/0.1) : 1;
@@ -75,7 +75,7 @@ vector<vector<double>> model::phi_func(vector<double>& input){
 }
 
 double model::Error_func(SongData & data){
-    vector<vector<double>> phi = phi_func(data.input);
+    vector<vector<double> > phi = phi_func(data.input);
     double y = 0;
     for(int i = 0; i < 11 ; i++)
         for(int j = 0; j < M ; j ++)
