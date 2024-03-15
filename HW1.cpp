@@ -9,6 +9,7 @@ using namespace std;
 
 int main()
 {
-    Model model(5);
+    int M = 5, Lamda = 1;
+    Model model(M, Lamda);
     model.Train();
 }

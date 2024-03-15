@@ -1,7 +1,8 @@
 #include"Model.h"
 
-Model::Model(int m){
+Model::Model(int m, int lamda){
     M = m;
+    Lamda = lamda;
     read_file();
     Training_set_normalized = Normalize(Training_set);
     Testing_set_normalized = Normalize(Testing_set);
@@ -39,36 +40,21 @@ void Model::read_file(){
 
 }
 
+
+
 void Model::initialize_params(){
     vector<vector<double> > weight (11, vector<double>(M, 1.));
 }
-vector<vector<double> > Model::Design_Matrix(vector<double>& input){
-    vector<vector<double> > phi (11, vector<double>(M, 0));
-    for(int i = 0; i < 11; i ++)
-        for(int j = 0; j < M ; j++)
-                phi[i][j] = j? sigmoid((input[i] - (3*(-M+1+2*(j - 1)*((M-1)/(M-2)))/M))/0.1) : 1;
-    return phi;
-}
 
 double Model::Error_func(SongData & data){
-    vector<vector<double> > phi = Design_Matrix(data.input);
-    double y = 0;
-    for(int i = 0; i < 11 ; i++)
-        for(int j = 0; j < M ; j ++)
-            y += W_ML[i][j] * phi[j][i];
-    return pow(y - data.output, 2);
 }
 
 void Model::Train(){
     Normalize(Training_set);
     Normalize(Testing_set);
+    Design_Matrix = generate_Design_Matrix();
+    calculate_W_ML();
 
-    for(int i = 0; i < 5 ; i++){
-        for(int j = 0 ; j < Training_set_normalized[i].input.size() ; j++){
-            cout << Training_set_normalized[i].input[j]<<" ";
-        }
-        cout << endl;
-    }
 }
 
 void Model::Test(){
@@ -103,10 +89,80 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
     return normalized;
 }
 
-vector<vector<double>>* Transpose(const vector<vector<double>> matrix){
+vector<vector<double>>* Model::Transpose(const vector<vector<double>> matrix){
+    vector<vector<double>>* transposed = new vector<vector<double>>(matrix[0].size(), vector<double>(matrix.size()));
+
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix[i].size(); j++) {
+            (*transposed)[j][i] = matrix[i][j];
+        }
+    }
+
+    return transposed;
+}
+
+vector<vector<double>>* Model::Inverse(const vector<vector<double>> matrix){
 
 }
 
-vector<vector<double>>* Inverse(const vector<vector<double>> matrix){
+vector<vector<vector<double>>>* Model::generate_Design_Matrix(){
+    vector<vector<vector<double>>>* DM = new vector<vector<vector<double>>>(Training_set_normalized.size(), vector<vector<double>>(M, vector<double>(11)));
+    
+    for(int i = 0; i < DM->size(); i++){
+        for(int j = 0; j < (*DM)[i].size(); j++){
+            for(int k = 0; k< (*DM)[i][j].size(); k++){
+                (*DM)[i][j][k] = phi(Training_set_normalized[i].input[j], k);
+            }
+        }
+    }
+    return DM;
+}
 
+double Model::phi(double x_k, int j)
+{
+    return j?  sigmoid((x_k - (3*(-M+1+2*(j - 1)*((M-1)/(M-2)))/M))/0.1) : 1;
+}
+
+void Model::calculate_W_ML(){
+    /*Accroding to the slides:
+    W_ML = (lamda*I + []^T[])^(-1) []^T t
+    */
+
+   //First calculate []^T[] it's shape is (M, M)
+    vector<vector<double>> A(M, vector<double>(M, 0));
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < A[i].size(); j++){
+            for(int k = 0; k < Design_Matrix->size(); k++){
+                for(int l = 0; l < (*Design_Matrix)[k][i].size(); l++){
+                    A[i][j] += (*Design_Matrix)[k][i][l] * (*Design_Matrix)[k][j][l];
+                }
+            }
+            if(i == j) A[i][j] += Lamda;
+        }
+    }
+    
+    
+    for(int i = 0; i < M ; i++){
+        for(int j = 0; j < M; j++){
+            std::cout << A[i][j] << " ";
+        }
+        std::cout<<endl;
+    }
+    std::cout << "======================" << endl;
+    //Inverse
+    Eigen::MatrixXd matrix(M, M);
+    for(int i=0; i < M; i++){
+        for(int j = 0;j < M; j++){
+            matrix(i,j) = A[i][j];
+        }
+    }
+    Eigen::MatrixXd matrix_inversed = matrix.inverse();
+    for(int i=0; i < M; i++){
+        for(int j = 0;j < M; j++){
+            std::cout << matrix_inversed(i,j) << " ";
+        }
+        std::cout << endl;
+    }
+
+    
 }
