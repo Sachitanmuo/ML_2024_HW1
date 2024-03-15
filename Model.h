@@ -14,7 +14,7 @@ struct SongData {
 
 class Model{
 private:
-    vector<vector<double> > W_ML;
+    vector<vector<double>>* W_ML;
     vector<SongData> Training_set;
     vector<SongData> Testing_set;
     vector<SongData> Training_set_normalized;
@@ -35,5 +35,5 @@ public:
     vector<vector<double>>* Inverse(const vector<vector<double>>);
     vector<vector<vector<double>>>* generate_Design_Matrix();
     double phi(double x_k, int j);
-    void calculate_W_ML();
+    vector<vector<double>>* calculate_W_ML();
 };

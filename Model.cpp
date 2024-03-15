@@ -53,7 +53,7 @@ void Model::Train(){
     Normalize(Training_set);
     Normalize(Testing_set);
     Design_Matrix = generate_Design_Matrix();
-    calculate_W_ML();
+    W_ML = calculate_W_ML();
 
 }
 
@@ -123,17 +123,19 @@ double Model::phi(double x_k, int j)
     return j?  sigmoid((x_k - (3*(-M+1+2*(j - 1)*((M-1)/(M-2)))/M))/0.1) : 1;
 }
 
-void Model::calculate_W_ML(){
+vector<vector<double>>* Model::calculate_W_ML(){
     /*Accroding to the slides:
     W_ML = (lamda*I + []^T[])^(-1) []^T t
     */
 
    //First calculate []^T[] it's shape is (M, M)
-    vector<vector<double>> A(M, vector<double>(M, 0));
+   int N = Design_Matrix->size();
+   int K = Training_set_normalized[0].input.size();
+   vector<vector<double>> A(M, vector<double>(M, 0));
     for(int i = 0; i < A.size(); i++){
         for(int j = 0; j < A[i].size(); j++){
-            for(int k = 0; k < Design_Matrix->size(); k++){
-                for(int l = 0; l < (*Design_Matrix)[k][i].size(); l++){
+            for(int k = 0; k < N; k++){
+                for(int l = 0; l < K; l++){
                     A[i][j] += (*Design_Matrix)[k][i][l] * (*Design_Matrix)[k][j][l];
                 }
             }
@@ -163,6 +165,29 @@ void Model::calculate_W_ML(){
         }
         std::cout << endl;
     }
+    //Calculate ()^-1 DM^T
+    vector<vector<vector<double>>> B(M, vector<vector<double>>(N, vector<double>(11, 0)));
+    for(int i = 0; i < M; i++){ //Inverse_matrix row index
+        for(int j=0; j < N; j++){ //DM^T column index = DM row index
+            for(int k = 0;k < M; k++){ //each element in the row
+                for(int l = 0;l < K; l++){ //each x_k in the x_vector
+                    B[i][j][l] = matrix_inversed(i, k) * (*Design_Matrix)[j][k][l];
+                }
+            }
+        }
+    }
+    vector<vector<double>>* W = new vector<vector<double>>(M, vector<double>(11, 0));
 
-    
+
+    //calculate W_ML = Bt
+    for(int i = 0; i < M; i++){ //B row index
+        for(int j=0; j < N; j++){ // t row index
+            for(int k = 0;k < M; k++){ //each element in the row
+                for(int l = 0;l < K; l++){ //each x_k in the x_vector
+                    (*W)[i][l] = B[i][j][l] * Training_set_normalized[j].output;  
+                }
+            }
+        }
+    }
+    return W;
 }
