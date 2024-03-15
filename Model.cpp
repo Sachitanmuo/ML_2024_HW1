@@ -25,7 +25,7 @@ void Model::read_file(){
         SongData songdata;
         vector<double> InputVector;
 
-        for(int i = 0; i < 12 ; i++){
+        for(int i = 0; i < 11 ; i++){
             getline(iss, token, ',');
             InputVector.push_back(stod(token));
         }
@@ -33,7 +33,6 @@ void Model::read_file(){
         getline(iss, token, ',');
         songdata.input = InputVector;
         songdata.output = stod(token);
-
         count++ <= 10000 ? Training_set.push_back(songdata) : Testing_set.push_back(songdata);
 
     }
@@ -53,7 +52,28 @@ void Model::Train(){
     Normalize(Training_set);
     Normalize(Testing_set);
     Design_Matrix = generate_Design_Matrix();
-    W_ML = calculate_W_ML();
+    W_ML = calculate_W_ML(); //(Mx11)
+    
+    for(int i = 0; i < M; i++){
+        for(int j = 0; j< 11; j++){
+            std::cout << (*W_ML)[i][j] << " ";
+        }
+        std::cout << endl;
+    }
+    int N = Training_set_normalized.size();
+    int K = Training_set_normalized[0].input.size();
+    vector<double> prediction(N, 0);
+    for(int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+            for(int k = 0; k < K; k++){
+                prediction[i] += (*W_ML)[j][k] * phi(k,j);
+                //cout<< prediction[i] <<endl;
+            }
+        }
+    }
+    //for(int i = 0 ; i < N; i++){
+      //  std::cout << "Prediction: " << prediction[i] << "   |   Actual: " << Training_set_normalized[i].output << endl; 
+    //}
 
 }
 
@@ -84,6 +104,7 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
     for(int i = 0; i < raw_data.size() ; i++){
         for(int j = 0; j < Training_set[i].input.size(); j++){
             normalized[i].input.push_back((raw_data[i].input[j] - mean[j])/std_dev[j]);
+            normalized[i].output = raw_data[i].output;
         }
     }
     return normalized;
@@ -166,7 +187,7 @@ vector<vector<double>>* Model::calculate_W_ML(){
         std::cout << endl;
     }
     //Calculate ()^-1 DM^T
-    vector<vector<vector<double>>> B(M, vector<vector<double>>(N, vector<double>(11, 0)));
+    vector<vector<vector<double>>> B(M, vector<vector<double>>(N, vector<double>(K, 0)));
     for(int i = 0; i < M; i++){ //Inverse_matrix row index
         for(int j=0; j < N; j++){ //DM^T column index = DM row index
             for(int k = 0;k < M; k++){ //each element in the row
@@ -175,6 +196,16 @@ vector<vector<double>>* Model::calculate_W_ML(){
                 }
             }
         }
+    }
+    // 输出 B
+    for(int i = 0; i < M; i++){
+        for(int j = 0; j < N; j++){
+            for(int k = 0; k < K; k++){
+                std::cout << B[i][j][k] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "======================" << std::endl;
     }
     vector<vector<double>>* W = new vector<vector<double>>(M, vector<double>(11, 0));
 
