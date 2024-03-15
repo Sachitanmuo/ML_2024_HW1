@@ -60,7 +60,15 @@ double Model::Error_func(SongData & data){
 }
 
 void Model::Train(){
-    
+    Normalize(Training_set);
+    Normalize(Testing_set);
+
+    for(int i = 0; i < Training_set_normalized.size() ; i++){
+        for(int j = 0 ; j < Training_set_normalized[i].size() ; j++){
+            cout << Training_set_normalized[i][j]<<" ";
+        }
+        cout << endl;
+    }
 }
 
 void Model::Test(){

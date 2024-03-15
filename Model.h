@@ -1,4 +1,3 @@
-
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -30,7 +29,7 @@ public:
     double sigmoid(double);
     double Error_func(SongData&);
     vector<SongData> Normalize(vector<SongData>&);
-    vector<vector<double>>* Transpose(const vector<vector<double>>);
-    vector<vector<double>>* Inverse(const vector<vector<double>>);
+    //vector<vector<double>>* Transpose(const vector<vector<double>>);
+    //vector<vector<double>>* Inverse(const vector<vector<double>>);
     
 };
