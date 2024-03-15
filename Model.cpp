@@ -55,7 +55,7 @@ double Model::Error_func(SongData & data){
     double y = 0;
     for(int i = 0; i < 11 ; i++)
         for(int j = 0; j < M ; j ++)
-            y += w[i][j] * phi[j][i];
+            y += W_ML[i][j] * phi[j][i];
     return pow(y - data.output, 2);
 }
 
@@ -63,9 +63,9 @@ void Model::Train(){
     Normalize(Training_set);
     Normalize(Testing_set);
 
-    for(int i = 0; i < Training_set_normalized.size() ; i++){
-        for(int j = 0 ; j < Training_set_normalized[i].size() ; j++){
-            cout << Training_set_normalized[i][j]<<" ";
+    for(int i = 0; i < 5 ; i++){
+        for(int j = 0 ; j < Training_set_normalized[i].input.size() ; j++){
+            cout << Training_set_normalized[i].input[j]<<" ";
         }
         cout << endl;
     }

@@ -9,6 +9,6 @@ using namespace std;
 
 int main()
 {
-    Model model;
+    Model model(5);
     model.Train();
 }
