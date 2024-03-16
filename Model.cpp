@@ -1,6 +1,6 @@
 #include"Model.h"
 
-Model::Model(int m, int lamda){
+Model::Model(int m, double lamda){
     M = m;
     Lamda = lamda;
     read_file();
@@ -44,8 +44,12 @@ void Model::read_file(){
 void Model::initialize_params(){
     vector<vector<double> > weight (11, vector<double>(M, 1.));
 }
-
-double Model::Error_func(SongData & data){
+double Model::Error_func(vector<double> prediction, vector<double> ground_truth){
+    double sum = 0;
+    for(int i = 0; i < prediction.size(); i++){
+        sum += pow(prediction[i] - ground_truth[i], 2);
+    }
+    return sum / 2.;
 }
 
 void Model::Train(){
@@ -66,8 +70,7 @@ void Model::Train(){
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
             for(int k = 0; k < K; k++){
-                prediction[i] += (*W_ML)[j][k] * phi(k,j);
-                //cout<< prediction[i] <<endl;
+                prediction[i] += (*W_ML)[j][k] * phi(Training_set_normalized[i].input[k],j);
             }
         }
     }
@@ -75,6 +78,15 @@ void Model::Train(){
       //  std::cout << "Prediction: " << prediction[i] << "   |   Actual: " << Training_set_normalized[i].output << endl; 
     //}
 
+    vector<double> ground_truth;
+    for(auto& data: Training_set_normalized){
+        ground_truth.push_back(data.output);
+    }
+
+    double error = Error_func(prediction, ground_truth);
+    double acc = Acc(prediction, ground_truth);
+    std::cout << "Total Training Error = " << error <<endl;
+    std::cout << "Accuracy = " << acc <<endl;
 }
 
 void Model::Test(){
@@ -110,33 +122,23 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
     return normalized;
 }
 
-vector<vector<double>>* Model::Transpose(const vector<vector<double>> matrix){
-    vector<vector<double>>* transposed = new vector<vector<double>>(matrix[0].size(), vector<double>(matrix.size()));
 
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
-            (*transposed)[j][i] = matrix[i][j];
-        }
-    }
 
-    return transposed;
-}
 
-vector<vector<double>>* Model::Inverse(const vector<vector<double>> matrix){
-
-}
 
 vector<vector<vector<double>>>* Model::generate_Design_Matrix(){
-    vector<vector<vector<double>>>* DM = new vector<vector<vector<double>>>(Training_set_normalized.size(), vector<vector<double>>(M, vector<double>(11)));
+    vector<vector<vector<double>>>* DM = new vector<vector<vector<double>>>
+    (Training_set_normalized.size(), vector<vector<double>>(M, vector<double>(11))); // [10000, M, 11]
     
     for(int i = 0; i < DM->size(); i++){
         for(int j = 0; j < (*DM)[i].size(); j++){
-            for(int k = 0; k< (*DM)[i][j].size(); k++){
+            for(int k = 0; k < (*DM)[i][j].size(); k++){
                 (*DM)[i][j][k] = phi(Training_set_normalized[i].input[j], k);
             }
         }
     }
     return DM;
+
 }
 
 double Model::phi(double x_k, int j)
@@ -148,77 +150,88 @@ vector<vector<double>>* Model::calculate_W_ML(){
     /*Accroding to the slides:
     W_ML = (lamda*I + []^T[])^(-1) []^T t
     */
-
-   //First calculate []^T[] it's shape is (M, M)
-   int N = Design_Matrix->size();
-   int K = Training_set_normalized[0].input.size();
-   vector<vector<double>> A(M, vector<double>(M, 0));
-    for(int i = 0; i < A.size(); i++){
-        for(int j = 0; j < A[i].size(); j++){
+   int N = Design_Matrix->size(); // N is the number of Trainin data
+   int K = Training_set_normalized[0].input.size(); // K is the number of the features
+   
+   //First calculate []^T[], It's shape is (M, M)
+   vector<vector<double>>* A = new vector<vector<double>>(M, vector<double>(M, 0));
+    for(int i = 0; i < A->size(); i++){
+        for(int j = 0; j < (*A)[i].size(); j++){
             for(int k = 0; k < N; k++){
                 for(int l = 0; l < K; l++){
-                    A[i][j] += (*Design_Matrix)[k][i][l] * (*Design_Matrix)[k][j][l];
+                    (*A)[i][j] += (*Design_Matrix)[k][i][l] * (*Design_Matrix)[k][j][l];
                 }
             }
-            if(i == j) A[i][j] += Lamda;
+            if(i == j){
+                (*A)[i][j] += Lamda; // Add Lamda*I in the diagonal
+            }
         }
     }
     
     
-    for(int i = 0; i < M ; i++){
-        for(int j = 0; j < M; j++){
-            std::cout << A[i][j] << " ";
-        }
-        std::cout<<endl;
-    }
-    std::cout << "======================" << endl;
     //Inverse
-    Eigen::MatrixXd matrix(M, M);
+    Eigen::MatrixXd *matrix = new Eigen::MatrixXd(M, M);
     for(int i=0; i < M; i++){
         for(int j = 0;j < M; j++){
-            matrix(i,j) = A[i][j];
+            (*matrix)(i,j) = (*A)[i][j];
         }
     }
-    Eigen::MatrixXd matrix_inversed = matrix.inverse();
-    for(int i=0; i < M; i++){
-        for(int j = 0;j < M; j++){
-            std::cout << matrix_inversed(i,j) << " ";
-        }
-        std::cout << endl;
-    }
+    delete A;
+
+    Eigen::MatrixXd matrix_inversed = matrix->inverse();
+
+    delete matrix;
+
     //Calculate ()^-1 DM^T
-    vector<vector<vector<double>>> B(M, vector<vector<double>>(N, vector<double>(K, 0)));
+    vector<vector<vector<double>>> *B = new vector<vector<vector<double>>>(M, vector<vector<double>>(N, vector<double>(K, 0)));
     for(int i = 0; i < M; i++){ //Inverse_matrix row index
-        for(int j=0; j < N; j++){ //DM^T column index = DM row index
+        for(int j = 0; j < N; j++){ //DM^T column index = DM row index
             for(int k = 0;k < M; k++){ //each element in the row
                 for(int l = 0;l < K; l++){ //each x_k in the x_vector
-                    B[i][j][l] = matrix_inversed(i, k) * (*Design_Matrix)[j][k][l];
+                    (*B)[i][j][l] += matrix_inversed(i, k) * (*Design_Matrix)[j][k][l];
                 }
             }
         }
     }
-    // 输出 B
-    for(int i = 0; i < M; i++){
-        for(int j = 0; j < N; j++){
-            for(int k = 0; k < K; k++){
-                std::cout << B[i][j][k] << " ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << "======================" << std::endl;
-    }
+
     vector<vector<double>>* W = new vector<vector<double>>(M, vector<double>(11, 0));
 
 
     //calculate W_ML = Bt
     for(int i = 0; i < M; i++){ //B row index
-        for(int j=0; j < N; j++){ // t row index
-            for(int k = 0;k < M; k++){ //each element in the row
-                for(int l = 0;l < K; l++){ //each x_k in the x_vector
-                    (*W)[i][l] = B[i][j][l] * Training_set_normalized[j].output;  
+                                //ignore Y row index since the shape of Y is [N,1]
+        for(int j=0; j < N; j++){ // each element in the row
+            for(int l = 0;l < K; l++){ //each x_k in the x_vector
+                (*W)[i][l] += (*B)[i][j][l] * Training_set_normalized[j].output;  
+            }
+            
+        }
+    }
+    
+    delete B;
+    
+    return W;
+}
+
+
+/*
+    vector<vector<double>>* W = new vector<vector<double>>(M, vector<double>(K, 0));
+    for(int i = 0; i < M; i++){ // Inverse_matrix row index
+        for(int j = 0; j < N; j++){ // DM^T column index = DM row index
+            double temp_output = Training_set_normalized[j].output;
+            for(int k = 0; k < M; k++){ // each element in the row
+                for(int l = 0; l < K; l++){ // each x_k in the x_vector
+                    (*W)[i][l] += matrix_inversed(i, k) * (*Design_Matrix)[j][k][l] * temp_output;
                 }
             }
         }
     }
-    return W;
+*/
+
+double Model::Acc(vector<double> predicted, vector<double> ground_truth){
+    double Acc = 0;
+    for(int i = 0; i < predicted.size(); i++){
+        Acc += fabs((ground_truth[i] - predicted[i])/predicted[i]);
+    }
+    return (1 - Acc/predicted.size());
 }

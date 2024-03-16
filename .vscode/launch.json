@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/user/Desktop/NYCU/ML/ML_2024_HW1",
-      "program": "c:/Users/user/Desktop/NYCU/ML/ML_2024_HW1/build/Debug/outDebug",
+      "cwd": "c:/Users/user/Desktop/NYCU/ML_2024",
+      "program": "c:/Users/user/Desktop/NYCU/ML_2024/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

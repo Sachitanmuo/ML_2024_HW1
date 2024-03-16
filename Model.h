@@ -21,18 +21,17 @@ private:
     vector<SongData> Testing_set_normalized;
     vector<vector<vector<double>>>* Design_Matrix;
     int M;
-    int Lamda;
+    double Lamda;
 public:
-    Model(int m, int lamda);
+    Model(int m, double lamda);
     void read_file();
     void initialize_params();
     void Train();
     void Test();
     double sigmoid(double);
-    double Error_func(SongData&);
+    double Error_func(vector<double> prediction, vector<double> ground_truth);
+    double Acc(vector<double> prediction, vector<double> ground_truth);
     vector<SongData> Normalize(vector<SongData>&);
-    vector<vector<double>>* Transpose(const vector<vector<double>>);
-    vector<vector<double>>* Inverse(const vector<vector<double>>);
     vector<vector<vector<double>>>* generate_Design_Matrix();
     double phi(double x_k, int j);
     vector<vector<double>>* calculate_W_ML();
