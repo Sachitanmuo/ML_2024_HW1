@@ -20,6 +20,7 @@ private:
     vector<SongData> Training_set_normalized;
     vector<SongData> Testing_set_normalized;
     vector<vector<vector<double>>>* Design_Matrix;
+    vector<Eigen::MatrixXd>* D_M; // a new format to store the design matrix
     int M;
     double Lamda;
 public:
@@ -35,4 +36,7 @@ public:
     vector<vector<vector<double>>>* generate_Design_Matrix();
     double phi(double x_k, int j);
     vector<vector<double>>* calculate_W_ML();
+    vector<vector<double>>* calculate_W_ML_();
+    vector<Eigen::MatrixXd>* generate_D_M();
+    void write_file(vector<double> y_pred, string filename);
 };

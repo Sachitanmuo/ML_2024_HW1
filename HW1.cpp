@@ -7,10 +7,15 @@
 using namespace std;
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    int M = 8;
-    double Lamda =  0.1;
+    if(argc < 3){
+        cout << "Please provide values for M and Lamda." << endl;
+        return 1;
+    }
+
+    int M = stoi(argv[1]);
+    double Lamda = stod(argv[2]);
     Model model(M, Lamda);
     model.Train();
 }
