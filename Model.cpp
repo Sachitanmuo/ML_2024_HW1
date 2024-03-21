@@ -163,7 +163,7 @@ void Model::Train(){
     vector<double> actual, x3;
     for(int i = 0; i < Training_set_normalized.size(); i++){
         actual.push_back(Training_set_normalized[i].output);
-        x3.push_back(Training_set_normalized[i].input[2]);
+        x3.push_back(Training_set[i].input[2]);
     }
     write_file_pred(prediction, actual, x3, "prediction_train.csv");
     for(int i = 0 ; i < N; i++){
@@ -232,6 +232,8 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
             normalized[i].output = raw_data[i].output;
         }
     }
+    Mean = mean;
+    Sd = std_dev;
     return normalized;
 }
 

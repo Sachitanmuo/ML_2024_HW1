@@ -30,6 +30,10 @@ private:
     int M;
     double Lamda;
     string File;
+    vector<double> Mean;
+    vector<double> Sd;
+    vector<double>mean_[5];
+    vector<double>sd_[5];
 public:
     Model(int m, double lamda, string file);
     void read_file(int offset);
