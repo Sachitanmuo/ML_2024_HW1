@@ -177,7 +177,7 @@ void Model::Train(){
 }
 
 void Model::Test(){
-    Testing_set_normalized = Normalize(Testing_set);
+    Testing_set_normalized = Normalize_test(Testing_set, Mean, Sd);//use Training set's mean and standard deviation
     int N = Testing_set_normalized.size();
     int K = Testing_set_normalized[0].input.size();
     vector<double> prediction(N, 0);
@@ -205,6 +205,19 @@ void Model::Test(){
 
 void Model::Test_5fold(){
 
+}
+
+vector<SongData> Model::Normalize_test(vector<SongData>& raw_data, vector<double> m, vector<double> std_dev){
+    vector<SongData> normalized(raw_data.size());
+    for(auto& sd : std_dev) sd = sqrt(sd/(10000-1));
+    for(int i = 0; i < raw_data.size() ; i++){
+        for(int j = 0; j < raw_data[i].input.size(); j++){
+            normalized[i].input.push_back((raw_data[i].input[j] - m[j])/std_dev[j]);
+            normalized[i].output = raw_data[i].output;
+        }
+    }
+
+    return normalized;
 }
 
 vector<SongData> Model::Normalize(vector<SongData>& raw_data){
@@ -236,7 +249,6 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
     Sd = std_dev;
     return normalized;
 }
-
 double Model::Acc(vector<double> predicted, vector<double> ground_truth){
     double Acc = 0;
     for(int i = 0; i < predicted.size(); i++){

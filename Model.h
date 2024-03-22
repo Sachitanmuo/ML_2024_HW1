@@ -51,4 +51,5 @@ public:
     Eigen::MatrixXd* calculate_W_ML_(vector<Eigen::MatrixXd>* D_M, vector<SongData> s);
     vector<Eigen::MatrixXd>* generate_D_M(vector<SongData>);
     void write_file_pred(vector<double> y_pred, vector<double> actual, vector<double> x3, string filename);
+    vector<SongData> Normalize_test(vector<SongData>& raw_data, vector<double> m, vector<double> std_dev);
 };
