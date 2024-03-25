@@ -46,10 +46,10 @@ public:
     double sigmoid(double);
     double Error_func(vector<double> prediction, vector<double> ground_truth, Eigen::MatrixXd m);
     double Acc(vector<double> prediction, vector<double> ground_truth);
-    vector<SongData> Normalize(vector<SongData>&);
+    vector<SongData> Normalize(vector<SongData>&, vector<double> &m, vector<double> &std_dev);
     double phi(double x_k, int j);
     Eigen::MatrixXd* calculate_W_ML_(vector<Eigen::MatrixXd>* D_M, vector<SongData> s);
     vector<Eigen::MatrixXd>* generate_D_M(vector<SongData>);
     void write_file_pred(vector<double> y_pred, vector<double> actual, vector<double> x3, string filename);
-    vector<SongData> Normalize_test(vector<SongData>& raw_data, vector<double> m, vector<double> std_dev);
+    vector<SongData> Normalize_test(vector<SongData>& raw_data, vector<double>& m, vector<double>& std_dev);
 };

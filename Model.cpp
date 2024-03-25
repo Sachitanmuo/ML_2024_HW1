@@ -62,7 +62,7 @@ void Model::read_file(int offset){
     }
     for(int i = 0; i < temp.size();i++){
         i < 10000 ? Training_set_5fold[offset].push_back(temp[(int)((i+ temp.size() * (offset/5.)))%temp.size()])
-            : Testing_set_5fold[0].push_back(temp[(int)(i+ temp.size()* (offset/5.))%temp.size()]);
+            : Testing_set_5fold[offset].push_back(temp[(int)(i+ temp.size()* (offset/5.))%temp.size()]);
     }
 }
 
@@ -77,26 +77,26 @@ void Model::Train_5fold(){
     }
     for(int i = 0; i < 5; i++){
         read_file(i);
-        Training_set_5fold[i] = Normalize(Training_set_5fold[i]);
-        D_M_[i] = generate_D_M(Training_set_5fold[i]);
-        W[i] = calculate_W_ML_(D_M_[i], Training_set_5fold[i]);
-        vector<double> y_pred(Training_set_5fold[i].size(), 0);
-        vector<double> actual(Training_set_5fold[i].size(), 0);
-        vector<double> x3(Training_set_5fold[i].size(), 0);
-        for(int x = 0; x < Training_set_5fold[i].size(); x++){
+        Training_set_5fold_norm[i] = Normalize(Training_set_5fold[i], mean_[i], sd_[i]);
+        D_M_[i] = generate_D_M(Training_set_5fold_norm[i]);
+        W[i] = calculate_W_ML_(D_M_[i], Training_set_5fold_norm[i]);
+        vector<double> y_pred(Training_set_5fold_norm[i].size(), 0);
+        vector<double> actual(Training_set_5fold_norm[i].size(), 0);
+        vector<double> x3(Training_set_5fold_norm[i].size(), 0);
+        for(int x = 0; x < Training_set_5fold_norm[i].size(); x++){
             for(int it = 0; it < M; it++){
                 for(int j = 0; j < 11; j++){
-                y_pred[x] += (*W[i])(it, j) *phi(Training_set_5fold[i][x].input[j], it);
+                y_pred[x] += (*W[i])(it, j) * phi(Training_set_5fold_norm[i][x].input[j], it);
                 }
             }
-            actual[x] = Training_set_5fold[i][x].output;
-            x3.push_back(Training_set_normalized[i].input[2]);
+            actual[x] = Training_set_5fold_norm[i][x].output;
+            x3[x] = (Training_set_5fold[i][x].input[2]);
             //cout << y_pred[x] << "|" << actual[x] << endl;
         }
         info_file << "Fold " << i+1<<":"<<endl;
         info_file << "Error: " << Error_func(y_pred, actual, (*W[i])) << endl;
         info_file << "Accuracy: " << Acc(y_pred, actual) << endl;
-        string o = "fivefold_" + to_string(i) + ".csv";
+        string o = "fivefold_" + to_string(i+1) + ".csv";
         write_file_pred(y_pred, actual, x3, o);
     }
     for(int z = 0; z < 5; z++){
@@ -115,13 +115,7 @@ void Model::initialize_params(){
     vector<vector<double> > weight (11, vector<double>(M, 1.));
 }
 double Model::Error_func(vector<double> prediction, vector<double> ground_truth, Eigen::MatrixXd m){
-    Eigen::MatrixXd XTX = m * m.transpose();
     double sum = 0;
-    for(int i = 0; i < M;i++){
-        for(int j =0; j< M;j++){
-            sum += fabs(Lamda * XTX(i, j));
-        }
-    }
     for(int i = 0; i < prediction.size(); i++){
         sum += pow(prediction[i] - ground_truth[i], 2);
     }
@@ -129,7 +123,7 @@ double Model::Error_func(vector<double> prediction, vector<double> ground_truth,
 }
 
 void Model::Train(){
-    Training_set_normalized = Normalize(Training_set);
+    Training_set_normalized = Normalize(Training_set, Mean, Sd);
   
     D_M = generate_D_M(Training_set_normalized);
     
@@ -180,18 +174,19 @@ void Model::Test(){
     Testing_set_normalized = Normalize_test(Testing_set, Mean, Sd);//use Training set's mean and standard deviation
     int N = Testing_set_normalized.size();
     int K = Testing_set_normalized[0].input.size();
+    ofstream out("Test_Info.txt");
     vector<double> prediction(N, 0);
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
             for(int k = 0; k < K; k++){
-                prediction[i] += (*W_ML)(j, k) * phi(Training_set_normalized[i].input[k],j);
+                prediction[i] += (*W_ML)(j, k) * phi(Testing_set_normalized[i].input[k],j);
             }
         }
     }
     vector<double> actual, x3;
-    for(int i = 0; i < Training_set_normalized.size(); i++){
-        actual.push_back(Training_set_normalized[i].output);
-        x3.push_back(Training_set_normalized[i].input[2]);
+    for(int i = 0; i < Testing_set_normalized.size(); i++){
+        actual.push_back(Testing_set_normalized[i].output);
+        x3.push_back(Testing_set[i].input[2]);
     }
     write_file_pred(prediction, actual, x3, "prediction_test.csv");
     for(int i = 0 ; i < N; i++){
@@ -199,17 +194,38 @@ void Model::Test(){
     }
     double error = Error_func(prediction, actual, *W_ML);
     double acc = Acc(prediction, actual);
-    std::cout << "Testing Error = " << error <<endl;
-    std::cout << "Accuracy = " << acc <<endl;
+    out << "Testing Error = " << error <<endl;
+    out << "Accuracy = " << acc <<endl;
 }
 
 void Model::Test_5fold(){
+    ofstream info_file("5fold_test_info.txt");
+    for(int i = 0; i < 5; i++){
+        Testing_set_5fold_norm[i] = Normalize_test(Testing_set_5fold[i], mean_[i], sd_[i]);
+        vector<double> y_pred(Testing_set_5fold_norm[i].size(), 0);
+        vector<double> actual(Testing_set_5fold_norm[i].size(), 0);
+        vector<double> x3(Testing_set_5fold[i].size(), 0);
+        for(int x = 0; x < Testing_set_5fold_norm[i].size(); x++){
+            for(int it = 0; it < M; it++){
+                for(int j = 0; j < 11; j++){
+                y_pred[x] += five_fold_W_ML(it, j) *phi(Testing_set_5fold_norm[i][x].input[j], it);
+                }
+            }
+            actual[x] = Testing_set_5fold[i][x].output;
+            x3[x] = (Testing_set_5fold[i][x].input[2]);
+            cout << y_pred[x] << "|" << actual[x] << "|" << x3[x] << endl;
+        }
+        info_file << "Fold " << i+1<<":"<<endl;
+        info_file << "Error: " << Error_func(y_pred, actual, five_fold_W_ML) << endl;
+        info_file << "Accuracy: " << Acc(y_pred, actual) << endl;
+        string o = "fivefold_test_" + to_string(i+1) + ".csv";
+        write_file_pred(y_pred, actual, x3, o);
+    }
 
 }
 
-vector<SongData> Model::Normalize_test(vector<SongData>& raw_data, vector<double> m, vector<double> std_dev){
+vector<SongData> Model::Normalize_test(vector<SongData>& raw_data, vector<double>& m, vector<double>& std_dev){
     vector<SongData> normalized(raw_data.size());
-    for(auto& sd : std_dev) sd = sqrt(sd/(10000-1));
     for(int i = 0; i < raw_data.size() ; i++){
         for(int j = 0; j < raw_data[i].input.size(); j++){
             normalized[i].input.push_back((raw_data[i].input[j] - m[j])/std_dev[j]);
@@ -220,7 +236,7 @@ vector<SongData> Model::Normalize_test(vector<SongData>& raw_data, vector<double
     return normalized;
 }
 
-vector<SongData> Model::Normalize(vector<SongData>& raw_data){
+vector<SongData> Model::Normalize(vector<SongData>& raw_data, vector<double>& m, vector<double>& std){
     vector<double> mean(raw_data[0].input.size(), 0);
     vector<double> std_dev(raw_data[0].input.size(), 0);
     vector<SongData> normalized(raw_data.size());
@@ -230,7 +246,7 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
             mean[i] += data.input[i];
         }
     }
-    for(auto& m : mean) m/= 10000;
+    for(auto& m_ : mean) m_/= 10000;
 
     //calculate the standard deviation
     for(auto & data : raw_data){
@@ -245,8 +261,8 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data){
             normalized[i].output = raw_data[i].output;
         }
     }
-    Mean = mean;
-    Sd = std_dev;
+    m = mean;
+    std = std_dev;
     return normalized;
 }
 double Model::Acc(vector<double> predicted, vector<double> ground_truth){
@@ -306,8 +322,6 @@ Eigen::MatrixXd* Model::calculate_W_ML_(vector<Eigen::MatrixXd>* D_M_, vector<So
             (*W)(i, j) = W_(i*K + j, 0);
         }
     }
-    cout << " *W: " << endl;
-    cout << *W << endl;
     return W;
 }
 

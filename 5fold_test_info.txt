@@ -1,0 +1,15 @@
+Fold 1:
+Error: 451.055
+Accuracy: 0.684214
+Fold 2:
+Error: 421.587
+Accuracy: 0.678997
+Fold 3:
+Error: 378.693
+Accuracy: 0.693297
+Fold 4:
+Error: 450.713
+Accuracy: 0.67797
+Fold 5:
+Error: 501.883
+Accuracy: 0.66354

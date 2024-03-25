@@ -19,4 +19,5 @@ int main(int argc, char* argv[])
     model.Train();
     model.Train_5fold();
     model.Test();
+    model.Test_5fold();
 }
