@@ -264,10 +264,10 @@ double Model::Acc(vector<double> predicted, vector<double> ground_truth){
     double Acc = 0;
     for(int i = 0; i < predicted.size(); i++){
         if(predicted[i] == 0){
-            Acc += fabs((ground_truth[i] - predicted[i]));
+            Acc += fabs((predicted[i] - ground_truth[i]));
         }
         else{
-            Acc += fabs((ground_truth[i] - predicted[i])/predicted[i]);
+            Acc += fabs((predicted[i] - ground_truth[i])/ground_truth[i]);
         }
     }
     return (1 - Acc/predicted.size());
