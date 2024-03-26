@@ -25,6 +25,16 @@ int main(int argc, char* argv[])
         model.Test();
         model.demo(demo_file);
     }
+
+    cout << "Regularization with lambda = 0.1:" << endl;
+    for(int i = 0; i < 6; i++){
+        cout << "M = " << 5*(i+1) << endl;
+        model.set_M(5*(i+1));
+        model.Train();
+        model.Test();
+        model.demo(demo_file);
+    }
     //model.Train_5fold();
     //model.Test_5fold();
 }
+

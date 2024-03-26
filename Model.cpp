@@ -200,6 +200,13 @@ void Model::Test_5fold(){
             actual[x] = Testing_set_5fold[i][x].output;
             x3[x] = (Testing_set_5fold[i][x].input[2]);
         }
+        if(i ==0){
+            std::cout << "5 Fold Cross Validation" << endl;
+            std::cout << "Error: " << Error_func(y_pred, actual) << endl;
+            std::cout << "Accuracy: " << Acc(y_pred, actual) << endl;
+            std::cout << "===========================================" << endl;
+
+        }
         info_file << "Fold " << i+1<<":"<<endl;
         info_file << "Error: " << Error_func(y_pred, actual) << endl;
         info_file << "Accuracy: " << Acc(y_pred, actual) << endl;
@@ -383,5 +390,8 @@ void Model::demo(string demo_file){
     std::cout << "===========================================" << endl;
     out << "Demo Error = " << error <<endl;
     out << "Demo Accuracy = " << acc <<endl;
-}   
+}
 
+void Model::set_lambda(double l){
+    Lamda = l;
+}

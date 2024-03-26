@@ -53,5 +53,6 @@ public:
     void write_file_pred(vector<double> y_pred, vector<double> actual, vector<double> x3, string filename);
     vector<SongData> Normalize_test(vector<SongData>& raw_data, vector<double>& m, vector<double>& std_dev);
     void set_M(int m);
+    void set_lambda(double l);
     void demo(string);
 };
