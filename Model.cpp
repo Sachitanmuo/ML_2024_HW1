@@ -148,7 +148,7 @@ void Model::Train(){
     double acc = Acc(prediction, actual);
     std::cout << "Training Error = " << error <<endl;
     std::cout << "Training Accuracy = " << acc <<endl;
-    std::cout << "===========================================" << endl;
+    std::cout << "-------------------------------------------" << endl;
     out << "Training Error = " << error <<endl;
     out << "Accuracy = " << acc <<endl;
 }
@@ -200,10 +200,9 @@ void Model::Test_5fold(){
             actual[x] = Testing_set_5fold[i][x].output;
             x3[x] = (Testing_set_5fold[i][x].input[2]);
         }
-        if(i ==0){
-            std::cout << "5 Fold Cross Validation" << endl;
-            std::cout << "Error: " << Error_func(y_pred, actual) << endl;
-            std::cout << "Accuracy: " << Acc(y_pred, actual) << endl;
+        if(i == 0){
+            std::cout << "5-fold Testing Error: " << Error_func(y_pred, actual) << endl;
+            std::cout << "5-fold Testing Accuracy: " << Acc(y_pred, actual) << endl;
             std::cout << "===========================================" << endl;
 
         }
