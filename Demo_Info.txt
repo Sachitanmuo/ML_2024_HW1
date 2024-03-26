@@ -1,2 +1,2 @@
-Demo Error = 449.109
-Demo Accuracy = 0.635909
+Demo Error = 350.552
+Demo Accuracy = 0.579179

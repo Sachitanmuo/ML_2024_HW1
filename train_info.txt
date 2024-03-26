@@ -1,2 +1,2 @@
 Training Error = 412.565
-Accuracy = 0.687321
+Accuracy = -0.601381

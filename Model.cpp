@@ -263,11 +263,11 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data, vector<double>& m,
 double Model::Acc(vector<double> predicted, vector<double> ground_truth){
     double Acc = 0;
     for(int i = 0; i < predicted.size(); i++){
-        if(predicted[i] == 0){
+        if(ground_truth[i] == 0){
             Acc += fabs((predicted[i] - ground_truth[i]));
         }
         else{
-            Acc += fabs((predicted[i] - ground_truth[i])/ground_truth[i]);
+            Acc += fabs((predicted[i] - ground_truth[i])/ ground_truth[i]);
         }
     }
     return (1 - Acc/predicted.size());
@@ -275,7 +275,7 @@ double Model::Acc(vector<double> predicted, vector<double> ground_truth){
 
 vector<Eigen::MatrixXd>* Model::generate_D_M(vector<SongData> x){
     int N = x[0].input.size();
-    vector<Eigen::MatrixXd>* DM = new vector<Eigen::MatrixXd>(N, Eigen::MatrixXd(Training_set_normalized.size(), M));
+    vector<Eigen::MatrixXd>* DM = new vector<Eigen::MatrixXd>(N, Eigen::MatrixXd(x.size(), M));
     //(Training_set_normalized.size(), vector<vector<double>>(M, vector<double>(11))); // [10000, M, 11]
 
     for(int i = 0; i < DM->size(); i++){
@@ -289,8 +289,8 @@ vector<Eigen::MatrixXd>* Model::generate_D_M(vector<SongData> x){
 }
 
 Eigen::MatrixXd* Model::calculate_W_ML_(vector<Eigen::MatrixXd>* D_M_, vector<SongData> s){
-    int N = Training_set_normalized.size();
-    int K = Training_set_normalized[0].input.size();
+    int N = s.size();
+    int K = s[0].input.size();
     //reshape the [N,M,K] Matrix into [N,M*K] Matrix
 
     Eigen::MatrixXd Design_Matrix(N, M * K);
