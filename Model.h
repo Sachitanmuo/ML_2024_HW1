@@ -44,7 +44,7 @@ public:
     void Test();
     void Test_5fold();
     double sigmoid(double);
-    double Error_func(vector<double> prediction, vector<double> ground_truth, Eigen::MatrixXd m);
+    double Error_func(vector<double> prediction, vector<double> ground_truth);
     double Acc(vector<double> prediction, vector<double> ground_truth);
     vector<SongData> Normalize(vector<SongData>&, vector<double> &m, vector<double> &std_dev);
     double phi(double x_k, int j);
@@ -52,4 +52,6 @@ public:
     vector<Eigen::MatrixXd>* generate_D_M(vector<SongData>);
     void write_file_pred(vector<double> y_pred, vector<double> actual, vector<double> x3, string filename);
     vector<SongData> Normalize_test(vector<SongData>& raw_data, vector<double>& m, vector<double>& std_dev);
+    void set_M(int m);
+    void demo(string);
 };

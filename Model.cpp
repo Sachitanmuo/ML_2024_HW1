@@ -3,15 +3,15 @@
 Model::Model(int m, double lamda, string file){
     M = m;
     Lamda = lamda;
-    read_file();
     File = file;
+    read_file();
 }
 
 double Model::sigmoid(double x){
     return 1./(1. + exp(-x));
 }
 void Model::read_file(){
-    ifstream input_file("HW1.csv");
+    ifstream input_file(File);
     string line;
     getline(input_file, line);
 
@@ -25,16 +25,17 @@ void Model::read_file(){
         getline(iss, token, ',');
         songdata.output = stod(token);
         for(int i = 0; i < 11 ; i++){
-            getline(iss, token, ',');
-            InputVector.push_back(stod(token));
+                getline(iss, token, ',');
+                InputVector.push_back(stod(token));
+            //getline(iss, token, ',');
+            //InputVector.push_back(stod(token));
         }    
         songdata.input = InputVector;
         count++ <= 10000 ? Training_set.push_back(songdata) : Testing_set.push_back(songdata);
-
     }
 }
 void Model::read_file(int offset){
-    ifstream input_file("HW1.csv");
+    ifstream input_file(File);
     string line;
     getline(input_file, line);
 
@@ -54,11 +55,6 @@ void Model::read_file(int offset){
         }    
         songdata.input = InputVector;
         temp.push_back(songdata);
-        /*
-        for(int i = 0; i< 11; i++){
-            cout << temp[temp.size()-1].input[i] << " ";
-        }
-        cout << "\n" << temp[temp.size()-1].output << endl;*/
     }
     for(int i = 0; i < temp.size();i++){
         i < 10000 ? Training_set_5fold[offset].push_back(temp[(int)((i+ temp.size() * (offset/5.)))%temp.size()])
@@ -94,7 +90,7 @@ void Model::Train_5fold(){
             //cout << y_pred[x] << "|" << actual[x] << endl;
         }
         info_file << "Fold " << i+1<<":"<<endl;
-        info_file << "Error: " << Error_func(y_pred, actual, (*W[i])) << endl;
+        info_file << "Error: " << Error_func(y_pred, actual) << endl;
         info_file << "Accuracy: " << Acc(y_pred, actual) << endl;
         string o = "fivefold_" + to_string(i+1) + ".csv";
         write_file_pred(y_pred, actual, x3, o);
@@ -114,7 +110,7 @@ void Model::Train_5fold(){
 void Model::initialize_params(){
     vector<vector<double> > weight (11, vector<double>(M, 1.));
 }
-double Model::Error_func(vector<double> prediction, vector<double> ground_truth, Eigen::MatrixXd m){
+double Model::Error_func(vector<double> prediction, vector<double> ground_truth){
     double sum = 0;
     for(int i = 0; i < prediction.size(); i++){
         sum += pow(prediction[i] - ground_truth[i], 2);
@@ -124,26 +120,10 @@ double Model::Error_func(vector<double> prediction, vector<double> ground_truth,
 
 void Model::Train(){
     Training_set_normalized = Normalize(Training_set, Mean, Sd);
-  
+    ofstream out("train_info.txt");
     D_M = generate_D_M(Training_set_normalized);
     
-    cout << "D_M: " << endl;
-    for(int i = 0; i < 5;i++){
-        for(int j = 0; j < M;j++){
-            std::cout << (*D_M)[0](i, j) << " ";
-        }
-        std::cout << endl;
-    }
-    W_ML = calculate_W_ML_(D_M, Training_set_normalized);
-
-    cout << "W_ML_2: " << endl;
-    for(int i = 0; i < M; i++){
-        for(int j = 0; j< 11; j++){
-            std::cout << (*W_ML)(i,j) << " ";
-        }
-        std::cout << endl;
-    }
-    
+    W_ML = calculate_W_ML_(D_M, Training_set_normalized);    
     int N = Training_set_normalized.size();
     int K = Training_set_normalized[0].input.size();
     vector<double> prediction(N, 0);
@@ -164,10 +144,13 @@ void Model::Train(){
         //std::cout << "Prediction: " << prediction[i] << "   |   Actual: " << Training_set_normalized[i].output << endl; 
     }
 
-    double error = Error_func(prediction, actual, *W_ML);
+    double error = Error_func(prediction, actual);
     double acc = Acc(prediction, actual);
-    std::cout << "Total Training Error = " << error <<endl;
-    std::cout << "Accuracy = " << acc <<endl;
+    std::cout << "Training Error = " << error <<endl;
+    std::cout << "Training Accuracy = " << acc <<endl;
+    std::cout << "===========================================" << endl;
+    out << "Training Error = " << error <<endl;
+    out << "Accuracy = " << acc <<endl;
 }
 
 void Model::Test(){
@@ -192,8 +175,11 @@ void Model::Test(){
     for(int i = 0 ; i < N; i++){
         //std::cout << "Prediction: " << prediction[i] << "   |   Actual: " << Training_set_normalized[i].output << endl; 
     }
-    double error = Error_func(prediction, actual, *W_ML);
+    double error = Error_func(prediction, actual);
     double acc = Acc(prediction, actual);
+    std::cout << "Testing Error = " << error <<endl;
+    std::cout << "Testing Accuracy = " << acc <<endl;
+    std::cout << "===========================================" << endl;
     out << "Testing Error = " << error <<endl;
     out << "Accuracy = " << acc <<endl;
 }
@@ -213,10 +199,9 @@ void Model::Test_5fold(){
             }
             actual[x] = Testing_set_5fold[i][x].output;
             x3[x] = (Testing_set_5fold[i][x].input[2]);
-            cout << y_pred[x] << "|" << actual[x] << "|" << x3[x] << endl;
         }
         info_file << "Fold " << i+1<<":"<<endl;
-        info_file << "Error: " << Error_func(y_pred, actual, five_fold_W_ML) << endl;
+        info_file << "Error: " << Error_func(y_pred, actual) << endl;
         info_file << "Accuracy: " << Acc(y_pred, actual) << endl;
         string o = "fivefold_test_" + to_string(i+1) + ".csv";
         write_file_pred(y_pred, actual, x3, o);
@@ -234,6 +219,10 @@ vector<SongData> Model::Normalize_test(vector<SongData>& raw_data, vector<double
     }
 
     return normalized;
+}
+
+void Model::set_M(int m){
+    M=m;
 }
 
 vector<SongData> Model::Normalize(vector<SongData>& raw_data, vector<double>& m, vector<double>& std){
@@ -268,13 +257,19 @@ vector<SongData> Model::Normalize(vector<SongData>& raw_data, vector<double>& m,
 double Model::Acc(vector<double> predicted, vector<double> ground_truth){
     double Acc = 0;
     for(int i = 0; i < predicted.size(); i++){
-        Acc += fabs((ground_truth[i] - predicted[i])/predicted[i]);
+        if(predicted[i] == 0){
+            Acc += fabs((ground_truth[i] - predicted[i]));
+        }
+        else{
+            Acc += fabs((ground_truth[i] - predicted[i])/predicted[i]);
+        }
     }
     return (1 - Acc/predicted.size());
 }
 
 vector<Eigen::MatrixXd>* Model::generate_D_M(vector<SongData> x){
-    vector<Eigen::MatrixXd>* DM = new vector<Eigen::MatrixXd>(11, Eigen::MatrixXd(Training_set_normalized.size(), M));
+    int N = x[0].input.size();
+    vector<Eigen::MatrixXd>* DM = new vector<Eigen::MatrixXd>(N, Eigen::MatrixXd(Training_set_normalized.size(), M));
     //(Training_set_normalized.size(), vector<vector<double>>(M, vector<double>(11))); // [10000, M, 11]
 
     for(int i = 0; i < DM->size(); i++){
@@ -306,16 +301,13 @@ Eigen::MatrixXd* Model::calculate_W_ML_(vector<Eigen::MatrixXd>* D_M_, vector<So
         y(i, 0) = s[i].output;
     }
     //==============Self Defined Pseudo Inverse=========================
-
     Eigen::MatrixXd ATA = Design_Matrix.transpose() * Design_Matrix;
     ATA += Lamda * Eigen::MatrixXd::Identity(M*K, M*K);
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(ATA, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::MatrixXd ATA_inversed = svd.solve(Eigen::MatrixXd::Identity(M*K, M*K));
-    //ATA.diagonal().array() += Lamda;
     Eigen::MatrixXd W_ = ATA_inversed * Design_Matrix.transpose() * y;
     Eigen::MatrixXd *W = new Eigen::MatrixXd(M, K);
     //===================================================================
-    cout << "Shape of W_: " << W_.rows() << " x " << W_.cols() << endl;
     
     for(int i = 0; i < M; i++){
         for(int j = 0; j < K; j++){
@@ -336,6 +328,60 @@ void Model::write_file_pred(vector<double> y_pred, vector<double> actual, vector
 }
 
 double Model::phi(double x_k, int j)
+
 {
     return j > 0 ?  sigmoid((x_k - (3.*(-M+1+2*((double)j - 1.)*(((double)M-1.)/((double)M-2.)))/(double)M))/0.1) : 1;
 }
+
+
+void Model::demo(string demo_file){
+    ifstream input_file(demo_file);
+    string line;
+    getline(input_file, line);
+    int count = 1;
+    vector<SongData> demo_set;
+    while(getline(input_file, line)){
+        istringstream iss(line);
+        string token;
+        SongData songdata;
+        vector<double> InputVector;
+        getline(iss, token, ',');
+        songdata.output = stod(token);
+        for(int i = 0; i < 11 ; i++){
+                getline(iss, token, ',');
+                InputVector.push_back(stod(token));
+        }
+        songdata.input = InputVector;
+        demo_set.push_back(songdata);
+    }
+    std::cout << "Number of datas in the Demo set: " << demo_set.size() << endl;
+    //Normalize
+    vector<SongData>demo_set_norm;
+    demo_set_norm = Normalize_test(demo_set, Mean, Sd);
+    
+    int N = demo_set_norm.size();
+    int K = demo_set_norm[0].input.size();
+    ofstream out("Demo_Info.txt");
+    vector<double> prediction(N, 0);
+    for(int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+            for(int k = 0; k < K; k++){
+                prediction[i] += (*W_ML)(j, k) * phi(demo_set_norm[i].input[k],j);
+            }
+        }
+    }
+    vector<double> actual, x3;
+    for(int i = 0; i < demo_set_norm.size(); i++){
+        actual.push_back(demo_set_norm[i].output);
+        x3.push_back(demo_set[i].input[2]);
+    }
+    write_file_pred(prediction, actual, x3, "prediction_demo.csv");
+    double error = Error_func(prediction, actual);
+    double acc = Acc(prediction, actual);
+    std::cout << "Demo Error = " << error <<endl;
+    std::cout << "Demo Accuracy = " << acc <<endl;
+    std::cout << "===========================================" << endl;
+    out << "Demo Error = " << error <<endl;
+    out << "Demo Accuracy = " << acc <<endl;
+}   
+
