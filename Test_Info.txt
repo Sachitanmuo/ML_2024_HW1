@@ -1,2 +1,2 @@
-Testing Error = 461.924
-Accuracy = -0.962819
+Testing Error = 457.276
+Accuracy = -0.964853
